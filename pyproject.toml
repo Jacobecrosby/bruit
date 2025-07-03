@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bruit"
+version = "0.1.0"
+description = "Bioacoustic Recognition of Unhealthy and Intact Tones (BRUIT)"
+authors = [
+  { name="Dr. Jacob E. Crosby" }
+]
+dependencies = [
+  "tensorflow",
+  "numpy",
+  "argparse",
+  "openhtf",
+  "pandas",
+  "pyyaml",
+  "scikit-learn",
+  "opencv-python",
+  "numba",
+  "matplotlib",
+]
+
+[project.optional-dependencies]
+gpu = ["onnxruntime-gpu"]
+mac = ["onnxruntime"]
+
+[project.scripts]
+pixal = "bruit.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["bruit"]

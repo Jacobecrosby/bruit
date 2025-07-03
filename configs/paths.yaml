@@ -1,0 +1,4 @@
+# *************** BASE PATH. DO NOT CHANGE ***************
+out_path: &out_path "./out/"
+validate_out_path: &validate_out_path "./validate"
+

@@ -10,6 +10,7 @@ authors = [
   { name="Dr. Jacob E. Crosby" }
 ]
 dependencies = [
+  "librosa",
   "tensorflow",
   "numpy",
   "argparse",
@@ -27,7 +28,7 @@ gpu = ["onnxruntime-gpu"]
 mac = ["onnxruntime"]
 
 [project.scripts]
-pixal = "bruit.cli:main"
+bruit = "bruit.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["bruit"]

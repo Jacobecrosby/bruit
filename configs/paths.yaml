@@ -2,3 +2,41 @@
 out_path: &out_path "./out/"
 validate_out_path: &validate_out_path "./validate"
 
+# ************** Path for component outputs **************
+trial_model_path: &component_model_path 
+  component: "test-assessment"
+  base: *out_path
+
+trial_validate_path: &component_validate_path
+  component: "test-assessment"
+  base: *validate_out_path
+
+# ********** DO NOT CHANGE THE FOLLOWING PATHS *********** 
+
+model_path: &model_path
+  model: "model"
+  base: *trial_model_path
+
+log_path: &log_path
+  log: "logs"
+  base: *trial_model_path
+
+validate_log_path: &validate_log_path
+  log: "logs"
+  base: *trial_validate_path
+
+preprocessed_audio_path: &preprocessed_audio_path
+  preprocessed_images: "preprocessed_audio"
+  base: *trial_model_path
+
+fig_path: &fig_path
+  fig: "figures"
+  base: *trial_model_path
+
+validate_fig_path: &validate_fig_path
+  fig: "figures"
+  base: *trial_validate_path
+
+metadata_path: &metadata_path
+  metadata: "metadata"
+  base: *trial_model_path

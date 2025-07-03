@@ -1,17 +1,25 @@
-██████═╗ ██████╗ ██╗   ██╗██╗████████╗
-██╔══██╝ ██╔══██╗██║   ██║██║╚══██╔══╝
-██████╗  ██████╔╝██║   ██║██║   ██║   
-██╔══██╗ ██╔══██╗██║   ██║██║   ██║   
-██████╔╝ ██║  ██║╚██████╔╝██║   ██║   
-╚═════╝  ╚═╝  ╚═╝ ╚═════╝ ╚═╝   ╚═╝   
+# ██████═╗ ██████╗ ██╗   ██╗██╗████████╗
+# ██╔══██╝ ██╔══██╗██║   ██║██║╚══██╔══╝
+# ██████╗  ██████╔╝██║   ██║██║   ██║   
+# ██╔══██╗ ██╔══██╗██║   ██║██║   ██║   
+# ██████╔╝ ██║  ██║╚██████╔╝██║   ██║   
+# ╚═════╝  ╚═╝  ╚═╝ ╚═════╝ ╚═╝   ╚═╝   
 
-   Bioacoustic Recognition of
-  Unhealthy and Intact Tones
+# Bioacoustic Recognition of Unhealthy and Intact Tones
 
 
 ####### Preprocessing ######
 
+preprocessing:
+  resample_rate: 16000
 
 
 
+####### Model Training ######
+model_training:
+  classifier: true
+  model_path: "models/"
 
+####### Plotting ######
+plotting:
+  plot: true

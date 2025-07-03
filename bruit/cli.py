@@ -8,13 +8,12 @@ from bruit.preprocessing import runner as preprocessing_runner
 
 def main():
     run_training = None  # placeholder to supress TensorFlow output
-    detect = None       # placeholder to supress Tensorflow output
     try:
         parser = argparse.ArgumentParser(prog="bruit", description="BRUIT CLI - A command line interface for BRUIT image processing and analysis")
         subparsers = parser.add_subparsers(dest="command", required=True)
 
         # Preprocess
-        prep = subparsers.add_parser("preprocess", help="Run all preprocessing steps on input images")
+        prep = subparsers.add_parser("preprocess", help="Run all preprocessing steps on input audio files (.wav)")
         prep.add_argument("--input", "-i", required=True, help="Input image folder")
         prep.add_argument("--quiet","-q", help="Quiet output", action="store_true")
 

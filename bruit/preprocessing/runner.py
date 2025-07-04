@@ -17,11 +17,6 @@ def run_preprocessing(input_dir, config=None, quiet=False):
     plotting_section = full_config.get("plotting", {})
 
     npz_dir = resolve_path(path_config.trial_model_path)
-
-    output_dir = resolve_path(path_config.preprocessed_audio_path)
-    output_dir = output_dir / subfolder.name
-     
-    input_dir = resolve_parent_inserted_path(subfolder, input_path.parent)
          
     log_path = resolve_path(path_config.log_path)
     log_path.mkdir(parents=True, exist_ok=True)
@@ -34,7 +29,12 @@ def run_preprocessing(input_dir, config=None, quiet=False):
         for subfolder in input_path.iterdir():
             if not subfolder.is_dir():
                 continue
-      
+            input_dir = resolve_parent_inserted_path(subfolder, input_path.parent)
+            
+            output_dir = resolve_path(path_config.preprocessed_audio_path) / subfolder.name
+            output_dir.mkdir(parents=True, exist_ok=True)
+            print(f"output_dir: {output_dir}")
+            
             # Save to new YAML file
             with open(metadata_path / "preprocessing.yaml", "w") as outfile:
                 yaml.dump({"preprocessing": preprocessing_section}, outfile, default_flow_style=False)
@@ -60,13 +60,21 @@ def run_preprocessing(input_dir, config=None, quiet=False):
                 quiet=quiet
             )
 
-            
         logger.info("Starting feature extraction and saving to .npz files")
-
-        label_map = {
-            "healthy": "healthy",
-            "artifact": "artifact",
-            "murmur": "murmur"
-        }
+        segment_audio_dirs = []
+        for subfolder in input_path.iterdir():
+            if not subfolder.is_dir():
+                continue
+            output_dir = resolve_path(path_config.preprocessed_audio_path)
+            segment_audio_path = output_dir / subfolder.name / "audio" / "segments"
+            print(f"segment_audio_path: {segment_audio_path}")
+            segment_audio_dirs.append(segment_audio_path.resolve())
+        
+        feature_extraction.run_feature_extraction(
+            segment_dirs=segment_audio_dirs,
+            save_path=npz_dir / "features.npz",
+            sr=preprocessing_section.get("sample_rate", 16000),
+            quiet=quiet
+        )
 
         

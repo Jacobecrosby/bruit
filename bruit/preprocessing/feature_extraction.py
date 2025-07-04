@@ -3,9 +3,10 @@ import numpy as np
 import soundfile as sf
 from pathlib import Path
 import os
+import logging
+from tqdm import tqdm
 
-def save_feature_npz(features, save_path):
-    np.savez_compressed(save_path, **features)
+logger = logging.getLogger("bruit")
 
 def extract_features(y, sr, segment_id, label):
     mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
@@ -23,32 +24,55 @@ def extract_features(y, sr, segment_id, label):
         "zcr": zcr
     }
 
-def run_feature_extraction(segment_dir, label_map, save_path, sr=16000, quiet=False):
-    segment_dir = Path(segment_dir)
+def run_feature_extraction(segment_dirs, save_path, sr=16000, quiet=False):
     all_features = []
 
-    for segment_path in sorted(segment_dir.glob("*.wav")):
-        y, _ = sf.read(segment_path)
-        y = librosa.to_mono(y) if y.ndim > 1 else y
+    for segment_root in tqdm(segment_dirs, desc="Extracting Features", disable=quiet):
+        segment_root = Path(segment_root)
 
-        # Derive label from parent directory or use filename logic
-        parent = segment_path.parent.name.lower()
-        label = label_map.get(parent, "unknown")
+        segment_files = sorted(segment_root.glob("*.wav"))
+        label = segment_root.parents[1].name.lower() if len(segment_root.parents) >= 2 else "unknown"
+        print(f"Processing segments for label: {label}")
 
-        segment_id = segment_path.stem
-        feats = extract_features(y, sr, segment_id, label)
-        all_features.append(feats)
+        for segment_path in tqdm(segment_files, desc=f"Extracting [{label}]", leave=False, disable=quiet):
+            y, _ = sf.read(segment_path)
+            y = librosa.to_mono(y) if y.ndim > 1 else y
 
-        if not quiet:
-            print(f"Extracted features for {segment_id}")
+            # Get label from two levels above
+            try:
+                label = segment_path.parents[2].name.lower()
+            except IndexError:
+                label = "unknown"
 
+            segment_id = segment_path.stem
+            feats = extract_features(y, sr, segment_id, label)
+            all_features.append(feats)
+
+            if not quiet:
+                logger.info(f"[{label}] Extracted: {segment_id}")
+    
+    for i, f in enumerate(all_features):
+        mfcc = f["mfcc"]
+        if not isinstance(mfcc, np.ndarray):
+            logger.warning(f"⚠️ MFCC {i} is not a NumPy array: type={type(mfcc)}")
+        elif mfcc.ndim != 2:
+            logger.warning(f"⚠️ MFCC {i} is not 2D: shape={mfcc.shape}")
+
+    try:
+        mfccs = np.asarray([f["mfcc"] for f in all_features], dtype=object)
+    except Exception as e:
+        logger.error(f"🔥 Error while creating MFCC array: {e}")
+        for i, f in enumerate(all_features):
+            logger.warning(f"MFCC shape {i}: {f['mfcc'].shape}")
+        raise e
+    
     # Convert to structured arrays
     segment_ids = np.array([f["segment_id"] for f in all_features])
-    labels = np.array([f["label"] for f in all_features])
-    mfccs = np.array([f["mfcc"] for f in all_features], dtype=object)
-    mels = np.array([f["mel"] for f in all_features], dtype=object)
-    rms = np.array([f["rms"] for f in all_features], dtype=object)
-    zcr = np.array([f["zcr"] for f in all_features], dtype=object)
+    labels = np.asarray([f["label"] for f in all_features])
+    mfccs = np.asarray([f["mfcc"] for f in all_features], dtype=object)
+    mels = np.asarray([f["mel"] for f in all_features], dtype=object)
+    rms = np.asarray([f["rms"] for f in all_features], dtype=object)
+    zcr = np.asarray([f["zcr"] for f in all_features], dtype=object)
 
     np.savez_compressed(
         save_path,
@@ -61,4 +85,5 @@ def run_feature_extraction(segment_dir, label_map, save_path, sr=16000, quiet=Fa
     )
 
     if not quiet:
-        print(f"\n✅ Saved all features to: {save_path}")
+        print(f"\n✅ Saved features to {save_path}")
+        logger.info(f"\n✅ Saved all extracted features to {save_path}")

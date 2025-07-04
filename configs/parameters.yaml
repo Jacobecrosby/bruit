@@ -39,6 +39,8 @@ preprocessing:
     rms_window: 0.1
     rms_peak_prominence: 0.005
 
+  save_full_filtered_waveform: false
+  save_segment_waveform: true
 
 
 

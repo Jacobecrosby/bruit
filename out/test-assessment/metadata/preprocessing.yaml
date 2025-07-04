@@ -16,6 +16,8 @@ preprocessing:
   mono: true
   normalize: true
   sample_rate: 16000
+  save_full_filtered_waveform: false
+  save_segment_waveform: true
   splitting:
     context: 0.1
     enabled: true

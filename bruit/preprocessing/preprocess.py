@@ -247,8 +247,11 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
     output_path = Path(output_path)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    audio_path = output_path / "audio"
-    audio_path.mkdir(parents=True, exist_ok=True)
+    audio_full_path = output_path / "audio" / "full"
+    audio_full_path.mkdir(parents=True, exist_ok=True)
+
+    audio_segment_path = output_path / "audio" / "segments"
+    audio_segment_path.mkdir(parents=True, exist_ok=True)
 
     plot_path = output_path / "plots"
     plot_type_paths = [plot_path / "spectrograms" / "raw", plot_path / "spectrograms" / "filtered", plot_path / "preprocessed" , plot_path / "debug", plot_path / "segments"]
@@ -258,7 +261,8 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
 
     paths = {
         "output": output_path,
-        "audio": audio_path,
+        "audio_full": audio_full_path,
+        "audio_segment": audio_segment_path,
         "spectrograms": {
             "raw": plot_type_paths[0],
             "filtered": plot_type_paths[1]
@@ -274,6 +278,12 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
         file_names.append(file.name)
         # Resample the audio
         y_filtered = preprocess_audio(input_file, paths, config, sample_rate, quiet=quiet)
+
+        if config.get('preprocessing', {}).get('save_full_filtered_audio', False):
+            # Save the full filtered audio
+            output_file = paths['audio_full'] / f"{file.stem}_filtered.wav"
+            sf.write(output_file, y_filtered, sample_rate)
+            logger.info(f"Saved full filtered audio to {output_file}")
 
         # Plot full waveform
         if config.get("plotting", {}).get("save_preprocessed_plots", False):
@@ -292,9 +302,10 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
                 logger.info(f"Plotting segment {i} waveform for {file.name}")
                 plot_waveform(segment, sample_rate, paths['segments'] / f"{file.stem}_{i}_waveform.png")
 
-        for i, s in enumerate(segments):
-            save_segment_path = paths['audio'] / f"{file.stem}_{i}.wav"
-            sf.write(save_segment_path, s, sample_rate)
+        if config.get('preprocessing', {}).get('save_segment_waveform', False):
+            for i, s in enumerate(segments):
+                save_segment_path = paths['audio_segment'] / f"{file.stem}_{i}.wav"
+                sf.write(save_segment_path, s, sample_rate)
 
     if config.get("plotting", {}).get("save_preprocessed_plots", False):
         plot_segment_counts(file_names, total_segments, save_path=paths['segments'] / "segment_counts.png")

@@ -1,0 +1,4 @@
+plotting:
+  plot: true
+  save_preprocessed_plots: true
+  save_spectogram_plots: true

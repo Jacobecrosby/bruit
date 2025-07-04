@@ -10,6 +10,7 @@ authors = [
   { name="Dr. Jacob E. Crosby" }
 ]
 dependencies = [
+  "soundfile",
   "librosa",
   "tensorflow",
   "numpy",

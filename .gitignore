@@ -67,6 +67,16 @@ pip-delete-this-directory.txt
 checkpoints/
 models/
 
+# Dataset, models, and generated output
+data/
+out/
+*.npz
+*.png
+*.jpg
+*.csv
+*.h5
+*.keras
+
 # Temporary files
 *.tmp
 *.bak

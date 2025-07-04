@@ -2,13 +2,13 @@
 out_path: &out_path "./out/"
 validate_out_path: &validate_out_path "./validate"
 
-# ************** Path for component outputs **************
-trial_model_path: &component_model_path 
-  component: "test-assessment"
+# ************** Path for trial outputs **************
+trial_model_path: &trial_model_path 
+  trial: "test-assessment"
   base: *out_path
 
-trial_validate_path: &component_validate_path
-  component: "test-assessment"
+trial_validate_path: &trial_validate_path
+  trial: "test-assessment"
   base: *validate_out_path
 
 # ********** DO NOT CHANGE THE FOLLOWING PATHS *********** 

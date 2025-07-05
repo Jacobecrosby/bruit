@@ -1,4 +1,6 @@
 preprocessing:
+  file_extension: npz
+  file_name: features
   filter:
     adaptive_lowcut:
       adaptive_lowcut_range:

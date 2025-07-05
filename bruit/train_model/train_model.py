@@ -1,9 +1,10 @@
 from bruit.train_model.cnn import CNNClassifier
+from bruit.train_model.cnn_seq import CNNSequenceClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.utils.class_weight import compute_class_weight
 from bruit.modules.config_loader import resolve_path, load_config
-from bruit.modules.plotting import plot_training_history
+from bruit.modules.plotting import plot_training_history, report_metrics
 import tensorflow as tf
 from pathlib import Path
 import numpy as np
@@ -14,6 +15,15 @@ import yaml
 import io
 import sys
 
+def get_model_class(model_type):
+    if model_type == "CNN":
+        return CNNClassifier
+    elif model_type == "CNN_Seq":
+        return CNNSequenceClassifier
+    else:
+        raise ValueError(f"Unsupported model type: {model_type}")
+
+
 def log_model_summary(model, logger):
     stream = io.StringIO()
     model.summary(print_fn=lambda x: stream.write(x + "\n"))
@@ -21,9 +31,9 @@ def log_model_summary(model, logger):
     stream.close()
     logger.info("\n" + summary_str)
 
-def load_data(npz_path):
+def load_data(npz_path, training_feature="mfcc"):
     data = np.load(npz_path, allow_pickle=True)
-    X = np.stack(data["mfcc"])  # or mel/zcr
+    X = np.stack(data[training_feature])  # or mel/zcr
     y = data["labels"]
     return X, y
 
@@ -40,16 +50,22 @@ def run_training(input_file, quiet=False):
     if not input_file:
         input_file = resolve_path(path_config.trial_model_path)
 
+    model_type = config.model_training.model_type
+
     log_path = resolve_path(path_config.log_path)
+    log_path = log_path / model_type
     log_path.mkdir(parents=True, exist_ok=True)
 
     metadata_path = resolve_path(path_config.metadata_path)
+    metadata_path = metadata_path / model_type
     metadata_path.mkdir(parents=True, exist_ok=True)
 
     model_path = resolve_path(path_config.model_path)
+    model_path = model_path / model_type
     model_path.mkdir(parents=True, exist_ok=True)
 
     figure_path = resolve_path(path_config.figure_path)
+    figure_path = figure_path / model_type
     figure_path.mkdir(parents=True, exist_ok=True)
 
     log_time = datetime.datetime.now().strftime("%H-%M-%S")
@@ -84,10 +100,11 @@ def run_training(input_file, quiet=False):
         "class_weights": config.model_training.class_weights,
         "model_name": config.model_training.model_name,
         "model_type": config.model_training.model_type,
-        "model_path": model_path
+        "model_path": model_path,
+        "architecture": config.model_training.architecture
     }
 
-    X, y = load_data(npz_file)
+    X, y = load_data(npz_file, training_feature=params["training_feature"])
     (X_train, X_val, y_train, y_val), class_names = prepare_data(X, y)
 
     print("📊 Calculating class weights...")
@@ -95,7 +112,8 @@ def run_training(input_file, quiet=False):
     class_weight_dict = {i: w for i, w in enumerate(class_weights)}
 
     print("📐 Building model...")
-    clf = CNNClassifier(input_shape=X_train.shape[1:], num_classes=len(class_names), params=params)
+    ModelClass = get_model_class(model_type)
+    clf = ModelClass(input_shape=X_train.shape[1:], num_classes=len(class_names), params=params)
     clf.compile()
 
     print("🚀 Training...")
@@ -121,3 +139,8 @@ def run_training(input_file, quiet=False):
     with open(yaml_path, 'w') as f:
         yaml.dump(params, f)
     logger.info("Training complete")
+
+    # Report metrics
+    report_metrics(clf, X_val, y_val, class_names, figure_path / f"{params['model_name']}_confusion-matrix.png",figure_path / f"{params['model_name']}_classification_report.json")
+
+   

@@ -73,7 +73,7 @@ def run_preprocessing(input_dir, config=None, quiet=False):
         file_name = config.preprocessing.file_name
         file_extension = config.preprocessing.file_extension
 
-        save_path = npz_dir / str(file_name) + "." + str(file_extension)
+        save_path = npz_dir / f"{file_name}.{file_extension}"
         feature_extraction.run_feature_extraction(
             segment_dirs=segment_audio_dirs,
             save_path=save_path,

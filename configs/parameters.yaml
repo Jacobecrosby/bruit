@@ -66,12 +66,12 @@ model_training:
   batch_size: 32
   learning_rate: 0.0001
   patience: 15
-  validation_split: 0.3
+  validation_split: 0.2
   class_weights: true
   model_name: "bruit_classifier"
-  model_type: "CNN"
+  model_type: "CNN_Seq" # CNN or CNN_Seq
   architecture:
-    conv_layers: 3
+    conv_layers: 2
     filters: [32, 64]
     kernel_size: [3, 3]
     pool_size: [2, 2]
@@ -79,16 +79,11 @@ model_training:
     dense_units: [128]
     activation: "relu"
     output_activation: "softmax"
+    rnn_units: 64                 # Used only for CNN_Seq
+    rnn_type: "gru"              # or gru      
 
 ####### Plotting ######
 plotting:
   save_preprocessed_plots: true
   save_spectogram_plots: true
   plot: true
-
-
-  #  artifact: 193, 194, 188, 443
-  #  healthy: 110, 110, 99, 235
-  #  murmur: 146, 162, 171, 303
-  #
-  #

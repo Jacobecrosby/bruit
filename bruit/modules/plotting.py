@@ -1,8 +1,11 @@
 import librosa
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report
 import matplotlib.cm as cm
 import logging
+import json
 
 logger = logging.getLogger("bruit")
 
@@ -122,3 +125,41 @@ def plot_training_history(history, save_path=None, title="Training History"):
         logger.info(f"Saved training plot to {save_path}")
     else:
         plt.show()
+
+def plot_confusion_matrix(y_true, y_pred, class_names, save_path=None, normalize=False):
+    cm = confusion_matrix(y_true, y_pred, normalize='true' if normalize else None)
+
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(cm, annot=True, fmt='.2f' if normalize else 'd', cmap='Blues',
+                xticklabels=class_names, yticklabels=class_names)
+    plt.xlabel("Predicted")
+    plt.ylabel("True")
+    plt.title("Normalized Confusion Matrix" if normalize else "Confusion Matrix")
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=300)
+        print(f"✅ Saved confusion matrix to {save_path}")
+    else:
+        plt.show()
+    plt.close()
+
+def report_metrics(model, X_val, y_val, class_names, save_confusion_path=None,report_path=None):
+    y_pred_probs = model.predict(X_val)
+    y_pred = np.argmax(y_pred_probs, axis=1)
+
+    #Generate the classification report as a dictionary
+    report_dict = classification_report(y_val, y_pred, target_names=class_names, output_dict=True)
+
+    # Print to console
+    print("📋 Classification Report:")
+    print(classification_report(y_val, y_pred, target_names=class_names))
+
+    # Save report to JSON
+    if report_path:
+        with open(report_path, "w") as f:
+            json.dump(report_dict, f, indent=4)
+        print(f"💾 Saved classification report to {report_path}")
+
+
+    plot_confusion_matrix(y_val, y_pred, class_names, save_path=save_confusion_path, normalize=True)

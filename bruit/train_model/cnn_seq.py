@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras import layers, models
 from tensorflow.keras.callbacks import EarlyStopping
 
-class CNNClassifier:
+class CNNSequenceClassifier:
     def __init__(self, input_shape, num_classes, params: dict):
         self.input_shape = input_shape
         self.num_classes = num_classes
@@ -19,22 +19,31 @@ class CNNClassifier:
         dropout_rate = self.architecture.get("dropout_rate", 0.5)
         dense_units = self.architecture.get("dense_units", [128])
         output_activation = self.architecture.get("architecture",{}).get("output_activation", "softmax")
+        rnn_units = self.architecture.get("rnn_units", 64)
+        rnn_type = self.architecture.get("rnn_type", "lstm").lower()  # "lstm" or "gru"
 
-        # First Conv Layer (needs input_shape)
         model = models.Sequential()
         model.add(layers.Input(shape=self.input_shape))
-        model.add(layers.Conv2D(filters[0], kernel_size, activation=activation))
-        model.add(layers.BatchNormalization())
-        model.add(layers.MaxPooling2D(pool_size))
 
-        # Additional Conv Layers
-        for i in range(1, self.params.get("conv_layers", len(filters))):
-            model.add(layers.Conv2D(filters[i], kernel_size, activation=activation))
+        # CNN stack
+        for i in range(self.params.get("conv_layers", len(filters))):
+            model.add(layers.Conv2D(filters[i], kernel_size, activation=activation, padding='same'))
             model.add(layers.BatchNormalization())
             model.add(layers.MaxPooling2D(pool_size))
 
-        model.add(layers.Flatten())
+        # Reshape for RNN: (batch, time, features)
+        shape = model.output_shape  # (None, H, W, C)
+        time_steps = shape[1]
+        features = shape[2] * shape[3]
+        model.add(layers.Reshape((time_steps, features)))
 
+        # Recurrent Layer
+        if rnn_type == "gru":
+            model.add(layers.Bidirectional(layers.GRU(rnn_units, return_sequences=False)))
+        else:
+            model.add(layers.Bidirectional(layers.LSTM(rnn_units, return_sequences=False)))
+
+        # Dense layers
         for units in dense_units:
             model.add(layers.Dense(units, activation=activation))
             model.add(layers.Dropout(dropout_rate))

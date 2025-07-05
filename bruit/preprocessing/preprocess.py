@@ -162,13 +162,22 @@ def split_audio_by_heartbeats(y, sr, config,  retry_aggressive_band=True, band_l
     Returns:
         List of audio segments (np.ndarray) containing one heartbeat each
     """
+    min_segments = config.get("preprocessing", {}).get("splitting", {}).get("min_segments", 4)
     peak_prominence = config.get("preprocessing", {}).get("splitting",{}).get("peak_prominence", 0.05)
     min_spacing = config.get("preprocessing", {}).get("splitting",{}).get("min_spacing", 0.3)
     max_spacing = config.get("preprocessing", {}).get("splitting",{}).get("max_spacing", 0.6)
     context = config.get("preprocessing", {}).get("splitting",{}).get("context", 0.1)
+    mad_threshold = config.get("preprocessing", {}).get("splitting",{}).get("mad_multiplier", 3.0)
+    band_lowcut = config.get("preprocessing", {}).get("splitting",{}).get("band_lowcut", 100)
+    band_highcut = config.get("preprocessing", {}).get("splitting",{}).get("band_highcut", 1000)
+    band_peak_prominence = config.get("preprocessing", {}).get("splitting",{}).get("band_peak_prominence", 0.02)
     rms_window = config.get("preprocessing", {}).get("splitting",{}).get("rms_window", 0.1)
     rms_peak_prominence = config.get("preprocessing", {}).get("splitting",{}).get("rms_peak_prominence", 0.005)
+    segment_duration = config.get("preprocessing", {}).get("splitting", {}).get("uniform_duration", 1.2)
+    stride = config.get("preprocessing", {}).get("splitting", {}).get("uniform_stride", segment_duration)
+    min_rms_threshold = config.get("preprocessing", {}).get("splitting", {}).get("min_rms_energy", 0.005)
 
+    stage = 1
 
     def extract_segments_from_peaks(peaks, abs_y):
         segments = []
@@ -194,7 +203,7 @@ def split_audio_by_heartbeats(y, sr, config,  retry_aggressive_band=True, band_l
     if len(peak_vals) > 0:
         median = np.median(peak_vals)
         mad = np.median(np.abs(peak_vals - median))
-        valid_mask = np.abs(peak_vals - median) < 3 * mad
+        valid_mask = np.abs(peak_vals - median) < mad_threshold * mad
         clean_peaks = peaks[valid_mask]
     else:
         clean_peaks = []
@@ -202,9 +211,10 @@ def split_audio_by_heartbeats(y, sr, config,  retry_aggressive_band=True, band_l
     segments = extract_segments_from_peaks(clean_peaks, abs_y)
 
     # Stage 2: Aggressive bandpass + peak detection
-    if retry_aggressive_band and len(segments) == 0:
+    if retry_aggressive_band and len(segments) <= min_segments:
         if not quiet:
             logger.info("No segments from Stage 1. Retrying with aggressive bandpass...")
+        stage = 2
 
         y_band = bandpass(y, sr, band_lowcut, band_highcut)
         abs_y_band = np.abs(y_band)
@@ -217,14 +227,15 @@ def split_audio_by_heartbeats(y, sr, config,  retry_aggressive_band=True, band_l
             valid_mask = np.abs(peak_vals - median) < 3 * mad
             clean_peaks = peaks_band[valid_mask]
         else:
-            clean_peaks = []
-
+            clean_peaks = []   
+        
         segments = extract_segments_from_peaks(clean_peaks, abs_y_band)
 
     # Stage 3: RMS envelope
-    if retry_with_rms and len(segments) == 0:
+    if retry_with_rms and len(segments) <= min_segments:
         if not quiet:
             logger.info("No segments from Stage 2. Retrying using RMS envelope...")
+        stage = 3
 
         hop_length = int(rms_window * sr)
         frame_length = 2 * hop_length
@@ -236,7 +247,43 @@ def split_audio_by_heartbeats(y, sr, config,  retry_aggressive_band=True, band_l
 
         segments = extract_segments_from_peaks(rms_peak_samples, np.abs(y))
 
-    return segments
+    if len(segments) <= min_segments:
+        if not quiet:
+            logger.info("No segments from Stage 3. Retrying with uniform fixed-length chopping...")
+        stage = 4
+
+        segment_samples = int(segment_duration * sr)
+        stride_samples = int(stride * sr)
+        segments = []
+
+        for start in range(0, len(y) - segment_samples + 1, stride_samples):
+            end = start + segment_samples
+            segment = y[start:end]
+            rms = np.sqrt(np.mean(segment**2))
+
+            if rms < min_rms_threshold:
+                continue
+
+            # Trim to first two prominent peaks (if available)
+            abs_seg = np.abs(segment)
+            peaks, _ = find_peaks(abs_seg, prominence=peak_prominence)
+
+            if len(peaks) >= 2:
+                t1, t2 = peaks[0], peaks[1]
+                pad = int(context * sr)
+                seg_start = max(0, t1 - pad)
+                seg_end = min(len(segment), t2 + pad)
+                trimmed_segment = segment[seg_start:seg_end]
+                segments.append(trimmed_segment)
+                logger.debug(f"Stage 4 trimmed segment length: {len(trimmed_segment)} samples")
+            else:
+                # Fallback: keep full segment if only one peak
+                segments.append(segment)
+
+        if not quiet:
+            logger.info(f"Stage 4 extracted {len(segments)} cleaned segments with first peak pair")
+
+    return segments, stage
 
 
 def run_preprocessing(input_dir, output_path, config=None, quiet=False):
@@ -272,6 +319,7 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
         "segments": plot_type_paths[4]
     }
     total_segments = []
+    total_stages = []
     file_names = []
     for file in tqdm(list(input_path.glob("*.wav")), desc=f"Preprocessing {input_dir}", disable=quiet):
         input_file = file.resolve()
@@ -291,8 +339,10 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
             plot_waveform(y_filtered, sample_rate, paths['preprocessed_plots'] / f"{file.stem}_waveform.png")
 
         # Segment into heartbeats
-        segments = split_audio_by_heartbeats(y_filtered, sample_rate, config)
+        segments, stages = split_audio_by_heartbeats(y_filtered, sample_rate, config)
         total_segments.append(int(len(segments)))
+        total_stages.append(stages)
+
         if not quiet:
             logger.info(f"Processing {file.name} with {len(segments)} segments")
 
@@ -308,6 +358,6 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
                 sf.write(save_segment_path, s, sample_rate)
 
     if config.get("plotting", {}).get("save_preprocessed_plots", False):
-        plot_segment_counts(file_names, total_segments, save_path=paths['segments'] / "segment_counts.png")
+        plot_segment_counts(file_names, total_segments, total_stages,input_path.name, save_path=paths['segments'] / "segment_counts.png")
 
     logger.info(f"Preprocessing complete. Processed {len(total_segments)} files with a total of {sum(total_segments)} segments.")

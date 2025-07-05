@@ -29,7 +29,7 @@ preprocessed_audio_path: &preprocessed_audio_path
   preprocessed_images: "preprocessed_audio"
   base: *trial_model_path
 
-fig_path: &fig_path
+figure_path: &figure_path
   fig: "figures"
   base: *trial_model_path
 

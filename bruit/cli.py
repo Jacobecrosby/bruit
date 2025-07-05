@@ -17,17 +17,21 @@ def main():
         prep.add_argument("--input", "-i", required=True, help="Input image folder")
         prep.add_argument("--quiet","-q", help="Quiet output", action="store_true")
 
+        # train model
+        prep = subparsers.add_parser("train", help="Train a model on preprocessed data")
+        prep.add_argument("--input", "-i", required=False, help="Preprocessed audio for ML input ")
+        prep.add_argument("--quiet","-q", help="Quiet output", action="store_true")
+
         
         args = parser.parse_args()
         cfg = load_config("configs/parameters.yaml") 
 
         if args.command == "preprocess":
             preprocessing_runner.run_preprocessing(args.input, config=cfg)
-            #preprocessing_runner.run_imagePreprocessor(config=cfg, quiet=args.quiet)  
-        #elif args.command == "train":
-        #    if run_training is None:
-        #        from bruit.train_model import run_training
-        #    run_training.run(args.input,config=cfg, quiet=args.quiet)
+        elif args.command == "train":
+            if run_training is None:
+                from bruit.train_model import train_model
+            train_model.run_training(args.input, quiet=args.quiet)
         #elif args.command == "validate":
         #    if detect is None:
         #        from bruit.validate import runner as validation_runner

@@ -19,10 +19,18 @@ preprocessing:
   save_full_filtered_waveform: false
   save_segment_waveform: true
   splitting:
+    band_highcut: 1000
+    band_lowcut: 100
+    band_peak_prominence: 0.05
     context: 0.1
     enabled: true
+    mad_multiplier: 6.0
     max_spacing: 0.6
+    min_rms_energy: 0.005
+    min_sengments: 5
     min_spacing: 0.3
     peak_prominence: 0.05
     rms_peak_prominence: 0.005
     rms_window: 0.1
+    uniform_duration: 1.2
+    uniform_stride: 0.6

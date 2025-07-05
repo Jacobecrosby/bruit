@@ -15,6 +15,7 @@ def run_preprocessing(input_dir, config=None, quiet=False):
      # Extract the 'preprocessing' section
     preprocessing_section = full_config.get("preprocessing", {})
     plotting_section = full_config.get("plotting", {})
+    feature_extraction_section = full_config.get("feature_extraction", {})
 
     npz_dir = resolve_path(path_config.trial_model_path)
          
@@ -33,11 +34,12 @@ def run_preprocessing(input_dir, config=None, quiet=False):
             
             output_dir = resolve_path(path_config.preprocessed_audio_path) / subfolder.name
             output_dir.mkdir(parents=True, exist_ok=True)
-            print(f"output_dir: {output_dir}")
-            
+
             # Save to new YAML file
             with open(metadata_path / "preprocessing.yaml", "w") as outfile:
                 yaml.dump({"preprocessing": preprocessing_section}, outfile, default_flow_style=False)
+            with open(metadata_path / "feature_extraction.yaml", "w") as outfile:
+                yaml.dump({"preprocessing": feature_extraction_section}, outfile, default_flow_style=False)
             with open(metadata_path / "plotting.yaml", "w") as outfile:
                 yaml.dump({"plotting": plotting_section}, outfile, default_flow_style=False)
             
@@ -67,12 +69,15 @@ def run_preprocessing(input_dir, config=None, quiet=False):
                 continue
             output_dir = resolve_path(path_config.preprocessed_audio_path)
             segment_audio_path = output_dir / subfolder.name / "audio" / "segments"
-            print(f"segment_audio_path: {segment_audio_path}")
             segment_audio_dirs.append(segment_audio_path.resolve())
-        
+        file_name = config.preprocessing.file_name
+        file_extension = config.preprocessing.file_extension
+
+        save_path = npz_dir / str(file_name) + "." + str(file_extension)
         feature_extraction.run_feature_extraction(
             segment_dirs=segment_audio_dirs,
-            save_path=npz_dir / "features.npz",
+            save_path=save_path,
+            config=full_config,
             sr=preprocessing_section.get("sample_rate", 16000),
             quiet=quiet
         )

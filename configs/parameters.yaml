@@ -32,26 +32,63 @@ preprocessing:
 
   splitting:
     enabled: true
+    min_sengments: 5
     min_spacing: 0.3
     max_spacing: 0.6
     context: 0.1
     peak_prominence: 0.05
+    mad_multiplier: 6.0
+    # Stage 2
+    band_lowcut: 100
+    band_highcut: 1000
+    band_peak_prominence: 0.05
+    # Stage 3
     rms_window: 0.1
     rms_peak_prominence: 0.005
+    # Stage 4
+    uniform_duration: 1.2  # seconds
+    uniform_stride: 0.6    # seconds (for overlap)
+    min_rms_energy: 0.005  # Minimum RMS energy to consider a segment valid (chops silence)
 
   save_full_filtered_waveform: false
   save_segment_waveform: true
 
-
+  file_name: "features"
+  file_extension: "npz"
 
 
 ####### Model Training ######
 model_training:
   classifier: true
-  model_path: "models/"
+  training_feature: "mfcc"    # Current Trainable Features:  mfcc, mel, rms, zcr
+  loss_function: "sparse_categorical_crossentropy"
+  epochs: 150
+  batch_size: 32
+  learning_rate: 0.0001
+  patience: 15
+  validation_split: 0.3
+  class_weights: true
+  model_name: "bruit_classifier"
+  model_type: "CNN"
+  architecture:
+    conv_layers: 3
+    filters: [32, 64]
+    kernel_size: [3, 3]
+    pool_size: [2, 2]
+    dropout_rate: 0.2
+    dense_units: [128]
+    activation: "relu"
+    output_activation: "softmax"
 
 ####### Plotting ######
 plotting:
   save_preprocessed_plots: true
   save_spectogram_plots: true
   plot: true
+
+
+  #  artifact: 193, 194, 188, 443
+  #  healthy: 110, 110, 99, 235
+  #  murmur: 146, 162, 171, 303
+  #
+  #

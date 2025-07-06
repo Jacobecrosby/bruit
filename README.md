@@ -26,7 +26,7 @@ weighted avg       0.88      0.87      0.87       197
 
 # Setup
 
-BRUIT is easily setup using the shell script `setup.sh`. This script builds a python virtual environment and can be ran on Linux, Windows, and MAC.
+BRUIT is easily setup using the shell script `setup.sh`. This script builds a python virtual environment and can be ran on Linux, Windows, and Mac.
 
 
 ### 1. Clone the Repository

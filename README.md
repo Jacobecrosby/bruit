@@ -9,6 +9,7 @@
 # Bioacoustic Recognition of Unhealthy and Intact Tones (BRUIT)
 
 This framework is a modular framework to train models for bruit identification. Every parameter, from preprocessing to model architectures, are customizable from a local config file.  
+
 Here is an example performance report from an example model trained using this framework.
 
 ```

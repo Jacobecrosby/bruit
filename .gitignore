@@ -76,7 +76,9 @@ out/
 *.csv
 *.h5
 *.keras
-
+!bruit/assets/**/*.png
+!bruit/assets/**/*.jpg
+!bruit/assets/**/*.PNG
 # Temporary files
 *.tmp
 *.bak

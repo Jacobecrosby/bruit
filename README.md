@@ -129,7 +129,11 @@ An example command:
 ```
 bruit preprocess -i /Data
 ```
-You will see loading bars as the files are preprocessed, this can take some time. The preprocessed data is saved in the form of a numpy file `.npz`.
+You will see loading bars, as seen in the figure below, during the preprocessing phase, this can take some time. The preprocessed data is saved in the form of a numpy file `.npz`.
+
+<p align="center">
+  <img src="/bruit/assets/loading_bars.PNG" alt="Image of loading bars from preprocessing in a Linux termnal"/>
+</p>
 
 Once the files are preprocessed, training a model can begin. This framework allows three types of models to be trained currently (more can be easily added later). Those are a CNN, CNN-LSTM, or CNN-GRU. The choice of model can be set in the `parameters.yaml` file here:
 ```

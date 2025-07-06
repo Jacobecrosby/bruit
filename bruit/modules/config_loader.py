@@ -73,16 +73,11 @@ def load_config(path):
         config_data = yaml.safe_load(f)
 
     config = _dict_to_namespace(config_data)
-
-    #print("\n📄 Loaded config:", path)
-    #print("-------------------------")
-    #or k in config.__dict__.keys():
-    #   print(f"• {k}")
-
+    
     return config
 
-def configure_pixal_logger(log_file):
-    logger = logging.getLogger("pixal")
+def configure_bruit_logger(log_file):
+    logger = logging.getLogger("bruit")
     logger.setLevel(logging.INFO)
     logger.handlers = []
     formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")

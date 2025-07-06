@@ -100,5 +100,5 @@ def run_feature_extraction(segment_dirs, save_path, config, sr=16000, quiet=Fals
     )
 
     if not quiet:
-        print(f"✅ Saved features to {save_path}")
-        logger.info(f"\n✅ Saved all extracted features to {save_path}")
+        print(f"Saved all extracted features to {save_path}")
+        logger.info(f"Saved all extracted features to {save_path}")

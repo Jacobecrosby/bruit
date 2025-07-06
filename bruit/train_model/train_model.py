@@ -107,20 +107,20 @@ def run_training(input_file, quiet=False):
     X, y = load_data(npz_file, training_feature=params["training_feature"])
     (X_train, X_val, y_train, y_val), class_names = prepare_data(X, y)
 
-    print("📊 Calculating class weights...")
+    print("Calculating class weights...")
     class_weights = compute_class_weight("balanced", classes=np.unique(y_train), y=y_train)
     class_weight_dict = {i: w for i, w in enumerate(class_weights)}
 
-    print("📐 Building model...")
+    print("Building model...")
     ModelClass = get_model_class(model_type)
     clf = ModelClass(input_shape=X_train.shape[1:], num_classes=len(class_names), params=params)
     clf.compile()
 
-    print("🚀 Training...")
+    print("Training...")
     history = clf.fit(X_train, y_train, X_val, y_val, epochs=params["epochs"], batch_size=params["batch_size"], patience=params['patience'], class_weight=class_weight_dict)
     plot_training_history(history, figure_path / f"{params['model_name']}_training_history.png")
 
-    print("💾 Saving model...")
+    print("Saving model...")
     clf.save(model_path)
 
     logger.info(f"Model saved to {model_path}")

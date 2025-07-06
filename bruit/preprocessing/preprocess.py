@@ -301,7 +301,7 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
     audio_segment_path.mkdir(parents=True, exist_ok=True)
 
     plot_path = output_path / "plots"
-    plot_type_paths = [plot_path / "spectrograms" / "raw", plot_path / "spectrograms" / "filtered", plot_path / "preprocessed" , plot_path / "debug", plot_path / "segments"]
+    plot_type_paths = [plot_path / "spectrograms" / "raw", plot_path / "spectrograms" / "filtered", plot_path / "raw", plot_path / "preprocessed" , plot_path / "debug", plot_path / "segments"]
  
     for d in plot_type_paths:
         d.mkdir(parents=True, exist_ok=True)
@@ -314,10 +314,12 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
             "raw": plot_type_paths[0],
             "filtered": plot_type_paths[1]
         },
-        "preprocessed_plots": plot_type_paths[2],
-        "debug": plot_type_paths[3],
-        "segments": plot_type_paths[4]
+        "raw": plot_type_paths[2],
+        "preprocessed_plots": plot_type_paths[3],
+        "debug": plot_type_paths[4],
+        "segments": plot_type_paths[5]
     }
+
     total_segments = []
     total_stages = []
     file_names = []
@@ -325,6 +327,13 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
         input_file = file.resolve()
         file_names.append(file.name)
         # Resample the audio
+        # Plot raw full waveform
+        if config.get("plotting", {}).get("save_preprocessed_plots", False):
+            logger.info(f"Plotting raw waveform for {file.name}")
+            y, _ = librosa.load(input_file, sr=sample_rate, mono=True)
+            plot_waveform(y, sample_rate, paths['raw'] / f"{file.stem}_waveform.png")
+
+
         y_filtered = preprocess_audio(input_file, paths, config, sample_rate, quiet=quiet)
 
         if config.get('preprocessing', {}).get('save_full_filtered_audio', False):
@@ -358,6 +367,6 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
                 sf.write(save_segment_path, s, sample_rate)
 
     if config.get("plotting", {}).get("save_preprocessed_plots", False):
-        plot_segment_counts(file_names, total_segments, total_stages,input_path.name, save_path=paths['segments'] / "segment_counts.png")
+        plot_segment_counts(file_names, total_segments, total_stages,input_path.name, save_path=plot_path / "segment_counts.png")
 
     logger.info(f"Preprocessing complete. Processed {len(total_segments)} files with a total of {sum(total_segments)} segments.")

@@ -69,7 +69,7 @@ model_training:
   validation_split: 0.2
   class_weights: true
   model_name: "bruit_classifier"
-  model_type: "CNN_Seq" # CNN or CNN_Seq
+  model_type: "CNN" # CNN or CNN_Seq
   architecture:
     conv_layers: 2
     filters: [32, 64]
@@ -80,7 +80,7 @@ model_training:
     activation: "relu"
     output_activation: "softmax"
     rnn_units: 64                 # Used only for CNN_Seq
-    rnn_type: "gru"              # or gru      
+    rnn_type: "gru"              # lstm or gru      
 
 ####### Plotting ######
 plotting:

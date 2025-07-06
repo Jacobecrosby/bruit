@@ -139,7 +139,7 @@ def plot_confusion_matrix(y_true, y_pred, class_names, save_path=None, normalize
 
     if save_path:
         plt.savefig(save_path, dpi=300)
-        print(f"✅ Saved confusion matrix to {save_path}")
+        logger.info(f"Saved confusion matrix to {save_path}")
     else:
         plt.show()
     plt.close()
@@ -152,14 +152,14 @@ def report_metrics(model, X_val, y_val, class_names, save_confusion_path=None,re
     report_dict = classification_report(y_val, y_pred, target_names=class_names, output_dict=True)
 
     # Print to console
-    print("📋 Classification Report:")
+    print("Classification Report:")
     print(classification_report(y_val, y_pred, target_names=class_names))
 
     # Save report to JSON
     if report_path:
         with open(report_path, "w") as f:
             json.dump(report_dict, f, indent=4)
-        print(f"💾 Saved classification report to {report_path}")
+        logger.info(f"Saved classification report to {report_path}")
 
 
     plot_confusion_matrix(y_val, y_pred, class_names, save_path=save_confusion_path, normalize=True)

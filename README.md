@@ -149,7 +149,7 @@ To train a model, the command is:
 ```
 bruit train
 ```
-An input file is optional! This usees the `paths.yaml` config to find the preprocessed file. If you want to train on separate file, use the optional input command.
+An input file is optional! This uses the `paths.yaml` config to find the preprocessed file. If you want to train on separate file, use the optional input command.
 ```
 bruit train -i /path/to/<optional-input>.npz
 ``` 

@@ -22,7 +22,8 @@ dependencies = [
   "opencv-python",
   "numba",
   "matplotlib",
-  "seaborn"
+  "seaborn",
+  "tqdm"
 ]
 
 [project.optional-dependencies]

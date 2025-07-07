@@ -18,7 +18,7 @@ import sys
 def get_model_class(model_type):
     if model_type == "CNN":
         return CNNClassifier
-    elif model_type == "CNN_Seq":
+    elif model_type == "LSTM" or model_type == "GRU":
         return CNNSequenceClassifier
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
@@ -51,6 +51,9 @@ def run_training(input_file, quiet=False):
         input_file = resolve_path(path_config.trial_model_path)
 
     model_type = config.model_training.model_type
+
+    if model_type == "CNN_Seq":
+        model_type = config.model_training.architecture.rnn_type.upper()
 
     log_path = resolve_path(path_config.log_path)
     log_path = log_path / model_type

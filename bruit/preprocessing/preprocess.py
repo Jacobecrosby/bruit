@@ -331,7 +331,7 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
         if config.get("plotting", {}).get("save_preprocessed_plots", False):
             logger.info(f"Plotting raw waveform for {file.name}")
             y, _ = librosa.load(input_file, sr=sample_rate, mono=True)
-            plot_waveform(y, sample_rate, paths['raw'] / f"{file.stem}_waveform.png")
+            plot_waveform(y, sample_rate, paths['raw'] / f"{file.stem}_waveform.png", title=f"Raw Audio - {file.name}")
 
 
         y_filtered = preprocess_audio(input_file, paths, config, sample_rate, quiet=quiet)
@@ -345,7 +345,7 @@ def run_preprocessing(input_dir, output_path, config=None, quiet=False):
         # Plot full waveform
         if config.get("plotting", {}).get("save_preprocessed_plots", False):
             logger.info(f"Plotting waveform for {file.name}")
-            plot_waveform(y_filtered, sample_rate, paths['preprocessed_plots'] / f"{file.stem}_waveform.png")
+            plot_waveform(y_filtered, sample_rate, paths['preprocessed_plots'] / f"{file.stem}_waveform.png", title=f"Preprocessed Audio - {file.name}")
 
         # Segment into heartbeats
         segments, stages = split_audio_by_heartbeats(y_filtered, sample_rate, config)

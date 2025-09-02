@@ -10,7 +10,7 @@
 
 This framework is a modular framework to train models for bruit identification. Every parameter, from preprocessing to model architectures, are customizable from a local config file.  
 
-Here is an example performance report from an example model trained using this framework.
+Here is an example performance report from an example model trained using this framework. **For a detailed walkthrough the data preprocessing pipline, see report.pdf**
 
 ```
 Classification Report:
